@@ -1,30 +1,48 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: lpesan <lpesan@student.42.fr>              +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2024/07/10 18:11:51 by lpesan            #+#    #+#              #
+#    Updated: 2024/07/10 20:28:55 by lpesan           ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
 
-NAME		= prog
+NAME	= so_long
+LIBMLX	= ./MLX42
+LIBFT	= ./libft
 
-RM			= rm -f
+HEADERS	= -I ./include -I ${LIBMLX}/include -I ${LIBFT}
+LIBS	= $(LIBMLX)/build/libmlx42.a -ldl -lglfw -pthread -lm ${LIBFT}/libft.a
 
-CC			= gcc
+SRCS	= $(shell find ./src -iname "*.c")
 
-CFLAGS		= #-Wall -Wextra -Werror
+OBJS	= ${SRCS:.c=.o}
 
-SRCS = $(wildcard *.c)   # Finds all .c files in the directory
+all: libft libmlx ${NAME}
 
-OBJS = $(SRCS:.c=.o)    # Replaces .c with .o for object filenames
+libft:
+	@${MAKE} -C ${LIBFT}
 
-all:		${NAME}
+libmlx:
+	@cmake $(LIBMLX) -DDEBUG=1 -B $(LIBMLX)/build && make -C $(LIBMLX)/build -j4
 
 %.o: %.c
-	$(CC) $(CFLAGS) -I/usr/include -Imlx_linux -O3 -c $< -o $@
+	@${CC} ${CFLAGS} -o $@ -c $< ${HEADERS} && printf "Compiling: $(notdir $<)\n"
 
-$(NAME): $(OBJS)
-	$(CC) $(OBJS) -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz -o $(NAME)
+${NAME}: ${OBJS}
+	@${CC} ${OBJS} ${LIBS} ${HEADERS} -o ${NAME}
 
 clean:
-			rm -f ${OBJS}
+	@rm -f ${OBJS}
+	@${MAKE} -C ${LIBFT} clean
 
-fclean:		clean
-			rm -f ${NAME}
+fclean: clean
+	@rm -f ${NAME}
+	@${MAKE} -C ${LIBFT} fclean
+	
+re: clean all
 
-re:			fclean all
-
-.PHONY:		all clean fclean re
+.PHONY: all, clean, fclean, re, libmlx, libft
